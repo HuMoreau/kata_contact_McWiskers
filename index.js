@@ -13,11 +13,10 @@ const shouldMigrate = !fs.existsSync(filename)
  * one at a time
  *
  */
-function * generateContacts () {
- // TODO
-  yield [`name-1`, `email-1@domain.tld`]
-  yield [`name-2`, `email-2@domain.tld`]
-  yield [`name-3`, `email-3@domain.tld`]
+function * generateContacts (numberContact) {
+  for (let i = 1; i <= numContacts; i++) {
+    yield [`name-${i}`, `email-${i}@domain.tld`];
+  }
 }
 
 const migrate = async (db) => {
@@ -33,8 +32,24 @@ const migrate = async (db) => {
 }
 
 const insertContacts = async (db) => {
-  console.log('Inserting contacts ...')
-  // TODO
+  console.log('Inserting contacts ...');
+  let contactList = []
+  let count = 0
+  for (const contact of generateContacts()) {
+    contactList.push(contact)
+    count++;
+    if (count%1000 === 0) {
+
+      const placeholders = contactList.map(() => '(?, ?)').join(',');
+      const values = contactList.flat();
+      // const [name, email] = contact;
+      await db.run('INSERT INTO contacts (name, email) VALUES ' + placeholders, values, (err) => {
+        if (err) console.error(err);
+      });
+      contactList = [];
+    }
+  }
+  console.log('Done inserting contacts');
 }
 
 const queryContact = async (db) => {
